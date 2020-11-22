@@ -11,11 +11,9 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.project.app.AppController;
+import com.example.project.model.DataModelBengkel;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -25,33 +23,34 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.api.model.AutocompletePrediction;
-import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mancj.materialsearchbar.MaterialSearchBar;
+import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 import com.skyfishjy.library.RippleBackground;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
-import android.widget.SearchView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,13 +64,10 @@ public class Maps extends AppCompatActivity implements SwipeRefreshLayout.OnRefr
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private PlacesClient mPlacesClient;
-    private List<AutocompletePrediction> predictionlist;
 
-    private Location mLastKnowLocation;
-    private LocationCallback mLocationCallback;
-
-    private MaterialSearchBar materialSearchBar;
+    private SearchView searchBar;
     private Button btn_find;
+    private ArrayList<DataModelBengkel> predictionlist;
     MapFragment mapFragment;
     String nama_bengkel,id_bengkel, hari_kerja, jam_buka, jam_tutup;
     FloatingActionButton lokasisaya;
@@ -83,8 +79,8 @@ public class Maps extends AppCompatActivity implements SwipeRefreshLayout.OnRefr
     Double lat,lng;
 
 
-    public static final String url_data = com.example.project.URL_SERVER.Ctampilkecamatan;
-    public static final String url_cari = com.example.project.URL_SERVER.Ccarikecamatan;
+    public static final String url_data = com.example.project.URL_SERVER.Ctampilbengkel;
+    public static final String url_cari = URL_SERVER.Ccaribengkel;
 
     public static final String ID = "id_bengkel";
     public static final String TITLE = "nama_bengkel";
@@ -105,7 +101,10 @@ public class Maps extends AppCompatActivity implements SwipeRefreshLayout.OnRefr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        materialSearchBar = findViewById(R.id.searchBar);
+        searchBar = findViewById(R.id.search_view);
+        searchBar.setQueryHint("Cari Kecamatan");
+        searchBar.setIconified(true);
+        searchBar.setOnQueryTextListener(this);
         btn_find = findViewById(R.id.btn_find);
         ripplebg = findViewById(R.id.ripple_bg);
         lokasisaya = findViewById(R.id.btn_lokasi);
@@ -123,6 +122,9 @@ public class Maps extends AppCompatActivity implements SwipeRefreshLayout.OnRefr
                        }
                    }
         );
+
+
+
 
         btn_find.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -147,7 +149,7 @@ public class Maps extends AppCompatActivity implements SwipeRefreshLayout.OnRefr
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setMyLocationEnabled(true);
+//        mMap.setMyLocationEnabled(true);
 
         center = new LatLng(3.3280664, 99.1191069);
         cameraPosition = new CameraPosition.Builder().target(center).zoom(13).build();
@@ -170,12 +172,12 @@ public class Maps extends AppCompatActivity implements SwipeRefreshLayout.OnRefr
 
     @Override
     public boolean onQueryTextSubmit(String query) {
-        cariData(query);
         return false;
     }
 
     @Override
     public boolean onQueryTextChange(String newText) {
+        cariData(newText);
         return false;
     }
 
@@ -186,7 +188,6 @@ public class Maps extends AppCompatActivity implements SwipeRefreshLayout.OnRefr
         pDialog.show();
 
         StringRequest strReq = new StringRequest(Request.Method.POST, url_cari, new Response.Listener<String>() {
-
             @Override
             public void onResponse(String response) {
                 Log.e("Response: ", response.toString());
@@ -203,7 +204,6 @@ public class Maps extends AppCompatActivity implements SwipeRefreshLayout.OnRefr
 
                         String getObject = jObj.getString(TAG_RESULTS);
                         JSONArray jsonArray = new JSONArray(getObject);
-
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject obj = jsonArray.getJSONObject(i);
 

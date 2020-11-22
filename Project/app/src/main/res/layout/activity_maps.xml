@@ -33,19 +33,12 @@
             app:borderWidth="0dp" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
-    <com.mancj.materialsearchbar.MaterialSearchBar
-        android:id="@+id/searchBar"
-        style="@style/MaterialSearchBarLight"
+    <androidx.appcompat.widget.SearchView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:mt_hint="Cari Bengkel"
-        android:layout_margin="16dp"
-        app:mt_maxSuggestionsCount="10"
-        app:mt_navIconEnabled="true"
-        app:mt_placeholder="Cari Bengkel"
-        android:elevation="5dp"
-        android:outlineProvider="bounds"
-        app:mt_speechMode="true" />
+        android:id="@+id/search_view"
+        android:icon="@drawable/ic_search"
+        style="@style/MaterialSearchBarLight"/>
 
     <com.skyfishjy.library.RippleBackground
         android:layout_width="match_parent"

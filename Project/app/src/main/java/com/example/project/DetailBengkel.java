@@ -2,19 +2,18 @@ package com.example.project;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,12 +23,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.StringRequest;
-import com.example.project.adapter.AdapterBengkel;
 import com.example.project.adapter.AdapterFasi;
 import com.example.project.adapter.GroupAdapter;
 import com.example.project.app.AppController;
 import com.example.project.model.ModelFasilitas;
 import com.example.project.model.ModelGambar;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -38,17 +37,15 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class DetailBengkel extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener{
     DrawerLayout drawerLayout;
-    TextView NamaBengkel, alamat, harijam,jarak;
+    TextView NamaBengkel, alamat, harijam,jarak,tel,tv_lng,tv_lat;
     ImageView sampul, imageView;
-    ProgressDialog pDialog;
+    FloatingActionButton go,telp;
 
     SwipeRefreshLayout swipe;
-    ListView list_view;
     RecyclerView recyclerView2,recyclerView;
     private ArrayList<ModelGambar> listData;
     GroupAdapter adapter;
@@ -71,6 +68,7 @@ public class DetailBengkel extends AppCompatActivity implements SwipeRefreshLayo
     public static final String TAG_jamBuka= "jam_buka";
     public static final String TAG_jamTutup= "jam_tutup";
     public static final String TAG_AlamatBengkel= "alamat_bengkel";
+    public static final String TAG_noTelp= "no_hp";
     public static final String TAG_GambarSampul = "gambar_sampul";
 
     public static final String TAG_RESULTS = "data";
@@ -102,6 +100,11 @@ public class DetailBengkel extends AppCompatActivity implements SwipeRefreshLayo
         alamat = findViewById(R.id.alamatDetail);
         harijam = findViewById(R.id.harijamDetail);
         jarak = findViewById(R.id.jarakDetail);
+        tel = findViewById(R.id.tel);
+        tv_lat = findViewById(R.id.tv_lat);
+        tv_lng = findViewById(R.id.tv_lng);
+        go = findViewById(R.id.btn_go);
+        telp = findViewById(R.id.btn_telp);
 
         swipe = (SwipeRefreshLayout) findViewById(R.id.swipe_refreshikm);
         drawerLayout = findViewById(R.id.drawer_layout);
@@ -134,6 +137,37 @@ public class DetailBengkel extends AppCompatActivity implements SwipeRefreshLayo
                    }
         );
 
+
+        telp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (tel.getText() != null){
+                    startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + tel.getText())));
+                }else{
+                    Toast.makeText(DetailBengkel.this, "No Telp Tidak ada", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        go.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (tv_lng.getText().equals(null)){
+                    Toast.makeText(DetailBengkel.this, "Lokasi Tidak Lengkap", Toast.LENGTH_SHORT).show();
+                } else if(tv_lat.getText().equals(null)){
+                    Toast.makeText(DetailBengkel.this, "Lokasi Tidak Lengkap", Toast.LENGTH_SHORT).show();
+                }else if (tv_lat.getText().equals(null)&&tv_lng.getText().equals(null)){
+                    Toast.makeText(DetailBengkel.this, "Lokasi Tidak Ada", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(DetailBengkel.this, "Lokasi "+ tv_lng.getText()+","+tv_lat.getText(), Toast.LENGTH_SHORT).show();
+                    Uri gmmIntentUri = Uri.parse("google.navigation:q=" + tv_lng.getText()+","+tv_lat.getText());
+                    Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                    mapIntent.setPackage("com.google.android.apps.maps");
+                    startActivity(mapIntent);
+                }
+            }
+        });
     }
     private void callData() {
         swipe.setRefreshing(true);
@@ -176,7 +210,10 @@ public class DetailBengkel extends AppCompatActivity implements SwipeRefreshLayo
 
                         String anu = jsonData.getString(TAG_hariKerja)+" / "+jsonData.getString(TAG_jamBuka)+" - "+jsonData.getString(TAG_jamTutup);
                         harijam.setText(anu);
+                        tv_lat.setText(jsonData.getString(TAG_LAT));
+                        tv_lng.setText(jsonData.getString(TAG_LNG));
                         alamat.setText(jsonData.getString(TAG_AlamatBengkel));
+                        tel.setText(jsonData.getString(TAG_noTelp));
                         Picasso.get()
                                 .load(Csampul+jsonData.getString(TAG_GambarSampul))
                                 .fit()

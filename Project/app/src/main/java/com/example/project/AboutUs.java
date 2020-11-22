@@ -1,6 +1,7 @@
 package com.example.project;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -27,6 +28,8 @@ import com.example.project.adapter.GroupAdapter;
 import com.example.project.app.AppController;
 import com.example.project.model.DataModelBengkel;
 import com.example.project.model.ModelGambar;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.squareup.picasso.Picasso;
 
@@ -38,15 +41,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener{
+public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, SearchView.OnQueryTextListener{
     DrawerLayout drawerLayout;
 
+    ProgressDialog pDialog;
     SwipeRefreshLayout swipe;
     RecyclerView recyclerView;
+    SearchView searchBar;
     private ArrayList<DataModelBengkel> listData;
     AdapterBengkel adapter;
 
-    public static final String url_data = URL_SERVER.Ctampilkecamatan;
+    public static final String url_data = URL_SERVER.Ctampilbengkel;
+    public static final String url_cari = URL_SERVER.Ccaribengkel;
 
     private static final String TAG = DetailBengkel.class.getSimpleName();
 
@@ -77,6 +83,11 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
         setContentView(R.layout.activity_about_us);
 
         drawerLayout = findViewById(R.id.drawer_layout);
+
+        searchBar = findViewById(R.id.search_data);
+        searchBar.setQueryHint("Cari Kecamatan");
+        searchBar.setIconified(true);
+        searchBar.setOnQueryTextListener(this);
 
         recyclerView = findViewById(R.id.recyclerview);
 
@@ -201,6 +212,139 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
     public void onRefresh() {
         callData();
     }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        cariData(newText);
+        return false;
+    }
+
+    private void cariData(final String keyword) {
+        pDialog = new ProgressDialog(AboutUs.this);
+        pDialog.setCancelable(false);
+        pDialog.setMessage("Loading...");
+        pDialog.show();
+
+        StringRequest strReq = new StringRequest(Request.Method.POST, url_cari, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e("Response: ", response.toString());
+
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    int value = jObj.getInt(TAG_VALUE);
+                    if (value == 1) {
+                        String getObject = jObj.getString(TAG_RESULTS);
+                        JSONArray jsonArray = new JSONArray(getObject);
+                        listData = new ArrayList<>();
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject obj = jsonArray.getJSONObject(i);
+                            DataModelBengkel item = new DataModelBengkel();
+
+                            GetLocation getLocation = new GetLocation(getApplicationContext());
+                            Location location = getLocation.getLocation();
+                            Double latSaya = location.getLatitude();
+                            Double lngSaya = location.getLongitude();
+                            double lng = Double.valueOf(obj.getString(TAG_LNG));
+                            double lat = Double.valueOf(obj.getString(TAG_LAT));
+                            GetJarak getJarak = new GetJarak(lng,lat,latSaya,lngSaya);
+                            long jar = Math.round(getJarak.cariJarak());
+
+                            Bundle bundle = getIntent().getExtras();
+                            if (bundle != null){
+                                dekat = bundle.getString("dekat");
+                                if (dekat.equals("ada") ){
+                                    if (jar <= 500){
+                                        item.setNama_bengkel(obj.getString(TAG_NamaBengkel));
+                                        item.setAlamat_bengkel(obj.getString(TAG_AlamatBengkel));
+                                        item.setGambar_sampul(obj.getString(TAG_GambarSampul));
+                                        item.setHari_kerja(obj.getString(TAG_HariKerja));
+                                        item.setLat(obj.getString(TAG_LAT));
+                                        item.setLng(obj.getString(TAG_LNG));
+
+                                        item.setJarak(String.valueOf(jar));
+                                        item.setId_bengkel(obj.getString(TAG_IDBENGKEL));
+                                        item.setJam_buka(obj.getString(TAG_jamBuka));
+                                        item.setJam_tutup(obj.getString(TAG_JamTutup));
+                                        item.setNama_kecamatan(obj.getString(TAG_NamaKecamatan));
+                                        item.setNama_kel(obj.getString(TAG_NamaKel));
+                                        item.setNama_pemilik(obj.getString(TAG_NamaPemilik));
+                                        item.setNo_hp(obj.getString(TAG_NoHp));
+                                        listData.add(item);
+                                    }
+                                }
+                            }
+                            else{
+                                item.setNama_bengkel(obj.getString(TAG_NamaBengkel));
+                                item.setAlamat_bengkel(obj.getString(TAG_AlamatBengkel));
+                                item.setGambar_sampul(obj.getString(TAG_GambarSampul));
+                                item.setHari_kerja(obj.getString(TAG_HariKerja));
+                                item.setLat(obj.getString(TAG_LAT));
+                                item.setLng(obj.getString(TAG_LNG));
+
+
+                                item.setJarak(String.valueOf(jar));
+                                item.setId_bengkel(obj.getString(TAG_IDBENGKEL));
+                                item.setJam_buka(obj.getString(TAG_jamBuka));
+                                item.setJam_tutup(obj.getString(TAG_JamTutup));
+                                item.setNama_kecamatan(obj.getString(TAG_NamaKecamatan));
+                                item.setNama_kel(obj.getString(TAG_NamaKel));
+                                item.setNama_pemilik(obj.getString(TAG_NamaPemilik));
+                                item.setNo_hp(obj.getString(TAG_NoHp));
+                                listData.add(item);
+                            }
+                        }
+                        adapter = new AdapterBengkel(AboutUs.this, listData);
+                        recyclerView.setAdapter(adapter);
+
+                    } else {
+                        Toast.makeText(getApplicationContext(), jObj.getString(TAG_MESSAGE), Toast.LENGTH_SHORT).show();
+                    }
+
+                } catch (JSONException e) {
+                    // JSON error
+                    e.printStackTrace();
+                }
+
+//                adapter.notifyDataSetChanged();
+                pDialog.dismiss();
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+//                VolleyLog.e(TAG, "Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                pDialog.dismiss();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting parameters to login url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("keyword", keyword);
+
+
+                return params;
+            }
+
+        };
+
+        AppController.getInstance().addToRequestQueue(strReq, tag_json_obj);
+    }
+
+
+
+
+
+
+
 
 
 
