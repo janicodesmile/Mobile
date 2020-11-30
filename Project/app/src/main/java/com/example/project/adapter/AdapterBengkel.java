@@ -57,7 +57,6 @@ public class AdapterBengkel extends RecyclerView.Adapter<AdapterBengkel.MyViewHo
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
         holder.nama.setText(item.get(position).getNama_bengkel());
-        String harijamm = item.get(position).getHari_kerja() + " / "+item.get(position).getJam_buka()+" - "+item.get(position).getJam_tutup();
         holder.hari.setText("Hari : "+item.get(position).getHari_kerja());
         holder.jam.setText("Jam : "+item.get(position).getJam_buka()+" - "+item.get(position).getJam_tutup());
         holder.alamat.setText(item.get(position).getAlamat_bengkel());

@@ -18,21 +18,17 @@
             />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btn_lokasi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="320dp"
-            android:layout_marginTop="700dp"
-            android:src="@drawable/ic_search"
+            android:layout_marginBottom="60dp"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/ic_search"
             android:backgroundTint="@color/design_default_color_primary_variant"
             app:borderWidth="0dp" />
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
     <androidx.appcompat.widget.SearchView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

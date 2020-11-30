@@ -1,6 +1,6 @@
 package com.example.project.model;
 
-public class DataModelBengkel {
+public class DataModelBengkel implements Comparable<DataModelBengkel>{
     private String id_bengkel,nama_kecamatan,nama_kel,nama_bengkel,lat,lng,alamat_bengkel,no_hp,nama_pemilik,hari_kerja,jam_buka,jam_tutup,gambar_sampul;
     private String jarak;
 
@@ -134,5 +134,12 @@ public class DataModelBengkel {
 
     public void setGambar_sampul(String gambar_sampul) {
         this.gambar_sampul = gambar_sampul;
+    }
+
+    @Override
+    public int compareTo(DataModelBengkel o) {
+        //logic to compare
+        //return Integer.parseInt( this.jarak) - Integer.parseInt(o.getJarak()) ;
+        return this.nama_bengkel.compareTo(o.getNama_bengkel()) ;
     }
 }

@@ -24,11 +24,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Project"
         android:usesCleartextTraffic="true">
-        <activity android:name=".ActivityInfo"></activity>
+        <activity android:name=".AboutUs"></activity>
+        <activity android:name=".ActivityInfo" />
         <activity android:name=".ImageFull" />
         <activity android:name=".DetailBengkel" />
         <activity android:name=".MainActivity" />
-        <activity android:name=".AboutUs" />
+        <activity android:name=".ActivitySplashScreen" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

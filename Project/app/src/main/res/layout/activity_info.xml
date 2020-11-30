@@ -151,7 +151,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Aplikasi ini Sengaja saya buat untuk memenuhi persyaratan Sarajana 1 di Institut Teknologi Nasional Malang. saya pula menyertakan biodata saya diatas"
+                android:text="Aplikasi ini Sengaja saya buat untuk memenuhi persyaratan Sarjana 1 di Institut Teknologi Nasional Malang. saya pula menyertakan biodata saya diatas"
                 android:layout_marginTop="200dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"

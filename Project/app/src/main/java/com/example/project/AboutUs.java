@@ -13,8 +13,11 @@ import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,10 +41,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, SearchView.OnQueryTextListener{
+public class AboutUs extends AppCompatActivity implements AdapterView.OnItemSelectedListener,SwipeRefreshLayout.OnRefreshListener, SearchView.OnQueryTextListener{
     DrawerLayout drawerLayout;
 
     ProgressDialog pDialog;
@@ -53,6 +60,7 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
 
     public static final String url_data = URL_SERVER.Ctampilbengkel;
     public static final String url_cari = URL_SERVER.Ccaribengkel;
+    public static final String url_cariFas = URL_SERVER.Ccarifas;
 
     private static final String TAG = DetailBengkel.class.getSimpleName();
 
@@ -82,10 +90,24 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about_us);
 
+        Spinner spinfasi = findViewById(R.id.spinfasi);
+        ArrayAdapter<CharSequence> adapterSpinner = ArrayAdapter.createFromResource(this,R.array.fasilitas, android.R.layout.simple_spinner_item);
+        adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinfasi.setAdapter(adapterSpinner);
+        spinfasi.setOnItemSelectedListener(this);
+
+
+        Spinner spinsort = findViewById(R.id.spinsorting);
+        ArrayAdapter<CharSequence> adapterSpinsort = ArrayAdapter.createFromResource(this,R.array.sort, android.R.layout.simple_spinner_item);
+        adapterSpinsort.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinsort.setAdapter(adapterSpinsort);
+        spinsort.setOnItemSelectedListener(this);
+
+
         drawerLayout = findViewById(R.id.drawer_layout);
 
         searchBar = findViewById(R.id.search_data);
-        searchBar.setQueryHint("Cari Kecamatan");
+        searchBar.setQueryHint("Cari Bengkel");
         searchBar.setIconified(true);
         searchBar.setOnQueryTextListener(this);
 
@@ -102,12 +124,12 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
                        @Override
                        public void run() {
                            swipe.setRefreshing(true);
-                           callData();
+                           callData(null);
                        }
                    }
         );
     }
-    private void callData() {
+    private void callData(String shortt) {
         swipe.setRefreshing(true);
 
         // Creating volley request obj
@@ -180,8 +202,35 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
                                 listData.add(item);
                             }
                         }
-                        adapter = new AdapterBengkel(AboutUs.this, listData);
-                        recyclerView.setAdapter(adapter);
+                        if (shortt != null){
+                            if (shortt.equals("Nama")){
+                                Collections.sort(listData, new Comparator<DataModelBengkel>() {
+                                    @Override
+                                    public int compare(DataModelBengkel o1, DataModelBengkel o2) {
+                                        return o1.getNama_bengkel().compareTo(o2.getNama_bengkel());
+                                    }
+                                });
+                                adapter = new AdapterBengkel(AboutUs.this, listData);
+                                recyclerView.setAdapter(adapter);
+                            }else if(shortt.equals("Jarak")){
+                                Collections.sort(listData, new Comparator<DataModelBengkel>() {
+                                    @Override
+                                    public int compare(DataModelBengkel o1, DataModelBengkel o2) {
+                                        return Integer.parseInt(o1.getJarak())- Integer.parseInt(o2.getJarak());
+                                    }
+                                });
+                                adapter = new AdapterBengkel(AboutUs.this, listData);
+                                recyclerView.setAdapter(adapter);
+                            }
+                            else {
+
+                            }
+
+                        }
+                        else {
+                            adapter = new AdapterBengkel(AboutUs.this, listData);
+                            recyclerView.setAdapter(adapter);
+                        }
 
                     } else {
                         Toast.makeText(getApplicationContext(), jObj.getString(TAG_MESSAGE), Toast.LENGTH_SHORT).show();
@@ -210,7 +259,7 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
     }
     @Override
     public void onRefresh() {
-        callData();
+        callData(null);
     }
 
     @Override
@@ -245,7 +294,6 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject obj = jsonArray.getJSONObject(i);
                             DataModelBengkel item = new DataModelBengkel();
-
                             GetLocation getLocation = new GetLocation(getApplicationContext());
                             Location location = getLocation.getLocation();
                             Double latSaya = location.getLatitude();
@@ -275,7 +323,6 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
                                         item.setNama_kel(obj.getString(TAG_NamaKel));
                                         item.setNama_pemilik(obj.getString(TAG_NamaPemilik));
                                         item.setNo_hp(obj.getString(TAG_NoHp));
-                                        listData.add(item);
                                     }
                                 }
                             }
@@ -301,7 +348,126 @@ public class AboutUs extends AppCompatActivity implements SwipeRefreshLayout.OnR
                         }
                         adapter = new AdapterBengkel(AboutUs.this, listData);
                         recyclerView.setAdapter(adapter);
+                    } else {
+                        Toast.makeText(getApplicationContext(), jObj.getString(TAG_MESSAGE), Toast.LENGTH_SHORT).show();
+                    }
 
+                } catch (JSONException e) {
+                    // JSON error
+                    e.printStackTrace();
+                }
+
+//                adapter.notifyDataSetChanged();
+                pDialog.dismiss();
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+//                VolleyLog.e(TAG, "Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                pDialog.dismiss();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting parameters to login url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("keyword", keyword);
+
+
+                return params;
+            }
+
+        };
+
+        AppController.getInstance().addToRequestQueue(strReq, tag_json_obj);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        switch (parent.getId()){
+            case R.id.spinfasi:{
+                String text = parent.getItemAtPosition(position).toString();
+                if (text.equals("Pilih Fasilitas"))
+                {
+                }else{
+                    cariDFasilitas(text);
+                    parent.setSelection(0);
+                }
+                break;
+            }
+            case R.id.spinsorting:{
+                String text = parent.getItemAtPosition(position).toString();
+                callData(text);
+                parent.setSelection(0);
+            }
+        }
+
+    }
+
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
+    private void cariDFasilitas(final String keyword) {
+        pDialog = new ProgressDialog(AboutUs.this);
+        pDialog.setCancelable(false);
+        pDialog.setMessage("Loading...");
+        pDialog.show();
+
+        StringRequest strReq = new StringRequest(Request.Method.POST, url_cariFas, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e("Response: ", response);
+
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    int value = jObj.getInt(TAG_VALUE);
+                    if (value == 1) {
+                        String getObject = jObj.getString(TAG_RESULTS);
+                        JSONArray jsonArray = new JSONArray(getObject);
+                        listData = new ArrayList<>();
+                        Log.e("Response: ", String.valueOf(jsonArray.length()));
+                        Toast.makeText(AboutUs.this,"Menampilkan "+String.valueOf(jsonArray.length())+" Data",Toast.LENGTH_SHORT).show();
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject obj = jsonArray.getJSONObject(i);
+
+                            DataModelBengkel item = new DataModelBengkel();
+
+                            GetLocation getLocation = new GetLocation(getApplicationContext());
+                            Location location = getLocation.getLocation();
+                            Double latSaya = location.getLatitude();
+                            Double lngSaya = location.getLongitude();
+
+                            double lng = Double.valueOf(obj.getString(TAG_LNG));
+                            double lat = Double.valueOf(obj.getString(TAG_LAT));
+                            GetJarak getJarak = new GetJarak(lng,lat,latSaya,lngSaya);
+                            long jar = Math.round(getJarak.cariJarak());
+
+
+                                item.setNama_bengkel(obj.getString(TAG_NamaBengkel));
+                                item.setAlamat_bengkel(obj.getString(TAG_AlamatBengkel));
+                                item.setGambar_sampul(obj.getString(TAG_GambarSampul));
+                                item.setHari_kerja(obj.getString(TAG_HariKerja));
+                                item.setLat(obj.getString(TAG_LAT));
+                                item.setLng(obj.getString(TAG_LNG));
+
+
+                                item.setJarak(String.valueOf(jar));
+
+                                item.setId_bengkel(obj.getString(TAG_IDBENGKEL));
+                                item.setJam_buka(obj.getString(TAG_jamBuka));
+                                item.setJam_tutup(obj.getString(TAG_JamTutup));
+                                item.setNama_pemilik(obj.getString(TAG_NamaPemilik));
+                                item.setNo_hp(obj.getString(TAG_NoHp));
+                                listData.add(item);
+                        }
+                        adapter = new AdapterBengkel(AboutUs.this, listData);
+                        recyclerView.setAdapter(adapter);
                     } else {
                         Toast.makeText(getApplicationContext(), jObj.getString(TAG_MESSAGE), Toast.LENGTH_SHORT).show();
                     }
