@@ -169,7 +169,6 @@ public class AboutUs extends AppCompatActivity implements AdapterView.OnItemSele
                                         item.setHari_kerja(obj.getString(TAG_HariKerja));
                                         item.setLat(obj.getString(TAG_LAT));
                                         item.setLng(obj.getString(TAG_LNG));
-
                                         item.setJarak(String.valueOf(jar));
                                         item.setId_bengkel(obj.getString(TAG_IDBENGKEL));
                                         item.setJam_buka(obj.getString(TAG_jamBuka));
@@ -189,8 +188,6 @@ public class AboutUs extends AppCompatActivity implements AdapterView.OnItemSele
                                 item.setHari_kerja(obj.getString(TAG_HariKerja));
                                 item.setLat(obj.getString(TAG_LAT));
                                 item.setLng(obj.getString(TAG_LNG));
-
-
                                 item.setJarak(String.valueOf(jar));
                                 item.setId_bengkel(obj.getString(TAG_IDBENGKEL));
                                 item.setJam_buka(obj.getString(TAG_jamBuka));
